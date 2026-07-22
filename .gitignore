@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+frontend/dist/
+backend/dist/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+backend/logs/**/*
+!backend/logs/**/.gitkeep
+
+# Runtime / cache
+backend/storage/uploads/**/*
+backend/storage/converted-cache/**/*
+backend/storage/generated/**/*
+!backend/storage/**/.gitkeep
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# PWA generated files
+frontend/pwa/service-worker/*.generated.js
