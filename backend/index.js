@@ -5,9 +5,13 @@ const logger = require('./config/logger');
 const errorHandler = require('./middlewares/errorHandler');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
+const authRoutes = require('./routes/auth.routes');
+const authenticate = require('./middlewares/authenticate');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
 
 // 请求日志：把morgan的输出接到logger里
 app.use(morgan('combined', {
@@ -21,6 +25,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.use('/api/v1/auth', authRoutes);
 
 app.use(errorHandler);
 
