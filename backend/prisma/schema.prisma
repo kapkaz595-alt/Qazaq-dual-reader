@@ -4,10 +4,366 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+enum UserStatus {
+  active
+  disabled
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  displayName  String     @map("display_name")
+  status       UserStatus @default(active)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  preferences  UserPreferences?
+  importTasks   ImportTask[]
+  conversionFeedbacks   ConversionFeedback[]
+  libraryEntries  LibraryEntry[]
+  tags            Tag[]
+  readingProgresses  ReadingProgress[]
+  bookmarks          Bookmark[]
+  bookstoreListings  BookstoreListing[]
+  purchases          Purchase[]
+  contentReviews  ContentReview[]
+
+  @@map("users")
+}
+
+enum ScriptType {
+  cyrillic
+  arabic
+}
+
+enum ThemeType {
+  light
+  dark
+}
+
+model UserPreferences {
+  id             String     @id @default(uuid())
+  userId         String     @unique @map("user_id")
+  defaultScript  ScriptType @default(cyrillic) @map("default_script")
+  fontPreference String?    @map("font_preference")
+  fontSize       Int?       @map("font_size")
+  theme          ThemeType  @default(light)
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  user           User       @relation(fields: [userId], references: [id])
+
+  @@map("user_preferences")
+}
+
+enum SourceType {
+  user_import
+  official_publish
+}
+
+model BookWork {
+  id          String   @id @default(uuid())
+  title       String
+  author      String?
+  description String?
+  sourceType  SourceType @map("source_type")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  versions    BookVersion[]
+  alignmentAnchors  AlignmentAnchor[]
+  importTasks       ImportTask[]
+  libraryEntries  LibraryEntry[]
+  readingProgresses  ReadingProgress[]
+  bookmarks          Bookmark[]
+  bookstoreListings  BookstoreListing[]
+
+  @@map("book_works")
+}
+
+enum GenerationMethod {
+  original_upload
+  system_converted
+}
+
+enum Direction {
+  ltr
+  rtl
+}
+
+model BookVersion {
+  id                String   @id @default(uuid())
+  bookWorkId        String   @map("book_work_id")
+  scriptType        ScriptType @map("script_type")
+  generationMethod  GenerationMethod @map("generation_method")
+  contentRef        String   @map("content_ref")
+  direction         Direction
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  bookWork          BookWork @relation(fields: [bookWorkId], references: [id])
+  chapters          DocumentChapter[]
+  sourceConversions      ConversionTask[] @relation("SourceVersion")
+  resultingConversions   ConversionTask[] @relation("ResultingVersion")
+  conversionFeedbacks   ConversionFeedback[]
+
+  @@unique([bookWorkId, scriptType])
+  @@map("book_versions")
+}
+
+model DocumentChapter {
+  id            String   @id @default(uuid())
+  bookVersionId String   @map("book_version_id")
+  chapterIndex  Int      @map("chapter_index")
+  title         String
+  content       String
+
+  bookVersion   BookVersion @relation(fields: [bookVersionId], references: [id])
+  cyrillicAlignments AlignmentAnchor[] @relation("CyrillicAlignment")
+  arabicAlignments   AlignmentAnchor[] @relation("ArabicAlignment")
+
+  @@index([bookVersionId, chapterIndex])
+  @@map("document_chapters")
+}
+
+model AlignmentAnchor {
+  id                  String   @id @default(uuid())
+  bookWorkId          String   @map("book_work_id")
+  cyrillicChapterId   String   @map("cyrillic_chapter_id")
+  arabicChapterId     String   @map("arabic_chapter_id")
+  segmentIndex        Int      @map("segment_index")
+  cyrillicSegmentRef  String   @map("cyrillic_segment_ref")
+  arabicSegmentRef    String   @map("arabic_segment_ref")
+
+  bookWork            BookWork @relation(fields: [bookWorkId], references: [id])
+  cyrillicChapter      DocumentChapter @relation("CyrillicAlignment", fields: [cyrillicChapterId], references: [id])
+  arabicChapter        DocumentChapter @relation("ArabicAlignment", fields: [arabicChapterId], references: [id])
+
+  @@index([bookWorkId, segmentIndex])
+  @@map("alignment_anchors")
+}
+
+enum FileType {
+  txt
+  epub
+  pdf
+}
+
+enum ImportTaskStatus {
+  pending
+  parsing
+  converting
+  completed
+  failed
+}
+
+model ImportTask {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  originalFilename    String   @map("original_filename")
+  fileType            FileType @map("file_type")
+  status              ImportTaskStatus @default(pending)
+  failureReason        String?  @map("failure_reason")
+  resultingBookWorkId String?  @map("resulting_book_work_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user                User     @relation(fields: [userId], references: [id])
+  resultingBookWork   BookWork? @relation(fields: [resultingBookWorkId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@map("import_tasks")
+}
+
+enum ConversionTaskStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+model ConversionTask {
+  id                       String   @id @default(uuid())
+  sourceBookVersionId      String   @map("source_book_version_id")
+  targetScriptType         ScriptType @map("target_script_type")
+  status                   ConversionTaskStatus @default(pending)
+  resultingBookVersionId   String?  @map("resulting_book_version_id")
+  createdAt                DateTime @default(now()) @map("created_at")
+
+  sourceBookVersion        BookVersion @relation("SourceVersion", fields: [sourceBookVersionId], references: [id])
+  resultingBookVersion     BookVersion? @relation("ResultingVersion", fields: [resultingBookVersionId], references: [id])
+
+  @@index([status])
+  @@map("conversion_tasks")
+}
+
+enum ReviewStatus {
+  pending
+  accepted
+  rejected
+}
+
+model ConversionFeedback {
+  id                String   @id @default(uuid())
+  userId            String   @map("user_id")
+  bookVersionId     String?  @map("book_version_id")
+  originalText      String   @map("original_text")
+  systemResult      String   @map("system_result")
+  suggestedResult   String   @map("suggested_result")
+  reviewStatus      ReviewStatus @default(pending) @map("review_status")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user              User        @relation(fields: [userId], references: [id])
+  bookVersion       BookVersion? @relation(fields: [bookVersionId], references: [id])
+
+  @@index([reviewStatus])
+  @@map("conversion_feedback")
+}
+
+enum AcquisitionType {
+  imported
+  purchased
+}
+
+model LibraryEntry {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  bookWorkId       String   @map("book_work_id")
+  acquisitionType  AcquisitionType @map("acquisition_type")
+  isFavorite       Boolean  @default(false) @map("is_favorite")
+  addedAt          DateTime @default(now()) @map("added_at")
+
+  user             User     @relation(fields: [userId], references: [id])
+  bookWork         BookWork @relation(fields: [bookWorkId], references: [id])
+  bookTags         BookTag[]
+
+  @@unique([userId, bookWorkId])
+  @@index([userId])
+  @@map("library_entries")
+}
+
+model Tag {
+  id       String   @id @default(uuid())
+  userId   String   @map("user_id")
+  name     String
+
+  user     User     @relation(fields: [userId], references: [id])
+  bookTags BookTag[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model BookTag {
+  libraryEntryId  String @map("library_entry_id")
+  tagId           String @map("tag_id")
+
+  libraryEntry    LibraryEntry @relation(fields: [libraryEntryId], references: [id])
+  tag             Tag          @relation(fields: [tagId], references: [id])
+
+  @@id([libraryEntryId, tagId])
+  @@index([tagId])
+  @@map("book_tags")
+}
+
+model ReadingProgress {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  bookWorkId     String   @map("book_work_id")
+  currentScript  ScriptType @map("current_script")
+  positionRef    String   @map("position_ref")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user           User     @relation(fields: [userId], references: [id])
+  bookWork       BookWork @relation(fields: [bookWorkId], references: [id])
+
+  @@unique([userId, bookWorkId])
+  @@map("reading_progress")
+}
+
+model Bookmark {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  bookWorkId     String   @map("book_work_id")
+  positionRef    String   @map("position_ref")
+  noteText       String?  @map("note_text")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user           User     @relation(fields: [userId], references: [id])
+  bookWork       BookWork @relation(fields: [bookWorkId], references: [id])
+
+  @@index([userId, bookWorkId])
+  @@map("bookmarks")
+}
+
+enum ListingStatus {
+  pending_review
+  listed
+  delisted
+}
+
+model BookstoreListing {
+  id            String   @id @default(uuid())
+  bookWorkId    String   @map("book_work_id")
+  price         Float
+  listingStatus ListingStatus @default(pending_review) @map("listing_status")
+  submittedBy   String   @map("submitted_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  bookWork      BookWork @relation(fields: [bookWorkId], references: [id])
+  submitter     User     @relation(fields: [submittedBy], references: [id])
+  purchases     Purchase[]
+  contentReviews  ContentReview[]
+
+  @@index([listingStatus])
+  @@map("bookstore_listings")
+}
+
+enum PurchaseStatus {
+  success
+  failed
+  processing
+}
+
+model Purchase {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  bookstoreListingId  String   @map("bookstore_listing_id")
+  purchaseStatus      PurchaseStatus @map("purchase_status")
+  purchasedAt         DateTime @default(now()) @map("purchased_at")
+
+  user                User     @relation(fields: [userId], references: [id])
+  bookstoreListing    BookstoreListing @relation(fields: [bookstoreListingId], references: [id])
+
+  @@index([userId, bookstoreListingId])
+  @@index([purchaseStatus])
+  @@map("purchases")
+}
+
+enum ReviewDecision {
+  pending
+  approved
+  rejected
+}
+
+model ContentReview {
+  id                  String   @id @default(uuid())
+  bookstoreListingId  String   @map("bookstore_listing_id")
+  reviewerId          String   @map("reviewer_id")
+  decision            ReviewDecision @default(pending)
+  remark              String?
+  decidedAt           DateTime? @map("decided_at")
+
+  bookstoreListing    BookstoreListing @relation(fields: [bookstoreListingId], references: [id])
+  reviewer            User             @relation(fields: [reviewerId], references: [id])
+
+  @@index([bookstoreListingId])
+  @@index([decision])
+  @@map("content_reviews")
 }
