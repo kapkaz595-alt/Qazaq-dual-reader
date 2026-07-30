@@ -52,7 +52,6 @@ describe('POST /api/v1/auth/login', () => {
   const loginTestPassword = 'abc12345';
 
   beforeAll(async () => {
-    // 先注册一个专门用于登录测试的账号
     await request(app)
       .post('/api/v1/auth/register')
       .send({
@@ -107,6 +106,128 @@ describe('POST /api/v1/auth/login', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.token).toBeDefined();
     expect(res.body.data.user.email).toBe(loginTestEmail);
+  });
+
+});
+
+describe('需要身份校验的接口（/me, /preferences, /logout）', () => {
+
+  const authedTestEmail = `authed_${Date.now()}@example.com`;
+  const authedTestPassword = 'abc12345';
+  let validToken;
+
+  beforeAll(async () => {
+    await request(app)
+      .post('/api/v1/auth/register')
+      .send({
+        email: authedTestEmail,
+        password: authedTestPassword,
+        displayName: '身份校验测试用户'
+      });
+
+    const loginRes = await request(app)
+      .post('/api/v1/auth/login')
+      .send({
+        email: authedTestEmail,
+        password: authedTestPassword
+      });
+
+    validToken = loginRes.body.data.token;
+  });
+
+  describe('GET /api/v1/auth/me', () => {
+
+    test('未携带令牌应返回401', async () => {
+      const res = await request(app).get('/api/v1/auth/me');
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('携带无效令牌应返回401', async () => {
+      const res = await request(app)
+        .get('/api/v1/auth/me')
+        .set('Authorization', 'Bearer this.is.not.a.valid.token');
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('携带有效令牌应返回用户信息', async () => {
+      const res = await request(app)
+        .get('/api/v1/auth/me')
+        .set('Authorization', `Bearer ${validToken}`);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.email).toBe(authedTestEmail);
+    });
+
+  });
+
+  describe('PATCH /api/v1/auth/preferences', () => {
+
+    test('未携带令牌应返回401', async () => {
+      const res = await request(app)
+        .patch('/api/v1/auth/preferences')
+        .send({ theme: 'dark' });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('theme取值非法应返回422', async () => {
+      const res = await request(app)
+        .patch('/api/v1/auth/preferences')
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ theme: 'rainbow' });
+
+      expect(res.statusCode).toBe(422);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('defaultScript取值非法应返回422', async () => {
+      const res = await request(app)
+        .patch('/api/v1/auth/preferences')
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ defaultScript: 'latin' });
+
+      expect(res.statusCode).toBe(422);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('合法偏好更新应返回200', async () => {
+      const res = await request(app)
+        .patch('/api/v1/auth/preferences')
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ theme: 'dark', defaultScript: 'arabic' });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.theme).toBe('dark');
+      expect(res.body.data.defaultScript).toBe('arabic');
+    });
+
+  });
+
+  describe('POST /api/v1/auth/logout', () => {
+
+    test('未携带令牌应返回401', async () => {
+      const res = await request(app).post('/api/v1/auth/logout');
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('携带有效令牌应返回200', async () => {
+      const res = await request(app)
+        .post('/api/v1/auth/logout')
+        .set('Authorization', `Bearer ${validToken}`);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
   });
 
 });

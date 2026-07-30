@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="kk" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>哈萨克语转写效果验证</title>
+  <style>
+    body { font-family: 'Arial', 'Noto Naskh Arabic', sans-serif; font-size: 28px; padding: 40px; }
+    .row { margin-bottom: 20px; }
+    .label { font-size: 14px; color: #666; direction: ltr; }
+  </style>
+</head>
+<body>
+  <div id="output"></div>
+
+  <script>
+    const CYRILLIC_TO_ARABIC_MAP = {
+      'а': 'ا', 'ә': 'ٵ',
+      'б': 'ب', 'в': 'ۆ', 'г': 'گ', 'ғ': 'ع',
+      'д': 'د', 'е': 'ە', 'ж': 'ج', 'з': 'ز',
+      'и': 'ي', 'й': 'ي', 'к': 'ك', 'қ': 'ق',
+      'л': 'ل', 'м': 'م', 'н': 'ن', 'ң': 'ڭ',
+      'о': 'و', 'ө': 'ٶ', 'п': 'پ', 'р': 'ر',
+      'с': 'س', 'т': 'ت', 'у': 'ۋ', 'ұ': 'ۇ',
+      'ү': 'ٷ', 'ф': 'ف', 'х': 'ح', 'һ': 'ه',
+      'ц': 'تس', 'ч': 'چ', 'ш': 'ش', 'щ': 'ش',
+      'ъ': '', 'ы': 'ى', 'і': 'ٸ', 'ь': '',
+      'э': 'ه', 'ю': 'يۋ', 'я': 'يا', 'ё': 'يو',
+    };
+
+    const FRONT_VOWELS = new Set(['ә', 'е', 'і', 'ө', 'ү', 'э']);
+    const BACK_VOWELS = new Set(['а', 'ы', 'о', 'ұ']);
+    const HAMZA_SKIP_LETTERS = new Set(['к', 'г', 'қ', 'ғ', 'е', 'э']);
+    const HAMZA = 'ٴ';
+
+    function getVowelHarmonyClass(word) {
+      for (const ch of word.toLowerCase()) {
+        if (FRONT_VOWELS.has(ch)) return 'front';
+        if (BACK_VOWELS.has(ch)) return 'back';
+      }
+      return null;
+    }
+
+    function needsHamza(word) {
+      const cls = getVowelHarmonyClass(word);
+      if (cls !== 'front') return false;
+      return ![...word.toLowerCase()].some(ch => HAMZA_SKIP_LETTERS.has(ch));
+    }
+
+    function transliterateWord(word) {
+      if (!word) return '';
+      let result = '';
+      for (const ch of word.toLowerCase()) {
+        const mapped = CYRILLIC_TO_ARABIC_MAP[ch];
+        result += mapped !== undefined ? mapped : ch;
+      }
+      if (needsHamza(word)) result = HAMZA + result;
+      return result;
+    }
+
+    function transliterateText(text) {
+      if (!text) return '';
+      const tokens = text.split(/([^а-яәғқңөұүһі]+)/i);
+      return tokens.map(t => /[а-яәғқңөұүһі]/i.test(t) ? transliterateWord(t) : t).join('');
+    }
+
+    const testWords = ['Сәлем', 'әлем', 'кітап', 'бала', 'қазақ'];
+
+    const output = document.getElementById('output');
+    testWords.forEach(word => {
+      const div = document.createElement('div');
+      div.className = 'row';
+      div.innerHTML = `<div class="label">${word} →</div><div>${transliterateText(word)}</div>`;
+      output.appendChild(div);
+    });
+  </script>
+</body>
+</html>
