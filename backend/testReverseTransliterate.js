@@ -1,7 +1,7 @@
 const { transliterateText: cyrToArabic } = require('./modules/conversion/cyrillicToArabic');
 const { transliterateText: arabicToCyr } = require('./modules/conversion/arabicToCyrillic');
 
-const testWords = ['әлем', 'бала', 'қазақ', 'кітап'];
+const testWords = ['әлем', 'бала', 'қазақ', 'кітап', 'ине', 'ащты'];
 
 testWords.forEach(word => {
   const arabic = cyrToArabic(word);

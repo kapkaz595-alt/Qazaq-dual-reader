@@ -1,10 +1,15 @@
 // backend/modules/conversion/arabicToCyrillic.js
 const { ARABIC_TO_CYRILLIC_MAP, MULTI_CHAR_SEQUENCES, HAMZA } = require('./arabicToCyrillicMap');
+const { AMBIGUITY_DICTIONARY } = require('./ambiguityDictionary');
 
 /**
  * 将单个阿拉伯哈萨克语单词转写为西里尔哈萨克文
  */
 function transliterateWord(arabicWord) {
+  // 优先查词典：如果整词能在歧义消解词典里查到，直接用词典答案
+  if (AMBIGUITY_DICTIONARY[arabicWord] !== undefined) {
+    return AMBIGUITY_DICTIONARY[arabicWord];
+  }
   if (!arabicWord) return '';
 
   let word = arabicWord;
