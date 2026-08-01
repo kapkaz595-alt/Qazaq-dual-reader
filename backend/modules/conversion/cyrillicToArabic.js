@@ -35,12 +35,13 @@ function transliterateText(cyrillicText) {
   if (!cyrillicText) return '';
 
   // 用捕获组切分，保留分隔符（空格、标点、换行等）以便原样拼回
-  const tokens = cyrillicText.split(/([^а-яәғқңөұүһі]+)/i);
+  // 注意：ё不在а-я的连续Unicode范围内，必须单独列出，否则会被误判为分隔符
+  const tokens = cyrillicText.split(/([^а-яёәғқңөұүһі]+)/i);
 
   return tokens
     .map(token => {
       // 判断token是否是"词"（含西里尔字母），还是分隔符/标点
-      const isWord = /[а-яәғқңөұүһі]/i.test(token);
+      const isWord = /[а-яёәғқңөұүһі]/i.test(token);
       return isWord ? transliterateWord(token) : token;
     })
     .join('');
