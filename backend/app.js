@@ -6,6 +6,7 @@ const errorHandler = require('./middlewares/errorHandler');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const authRoutes = require('./routes/auth.routes');
+const conversionRoutes = require('./routes/conversion-engine.routes');
 const authenticate = require('./middlewares/authenticate');
 
 const app = express();
@@ -26,6 +27,8 @@ app.get('/', (req, res) => {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api/v1/auth', authRoutes);
+
+app.use('/api/v1/convert', conversionRoutes);
 
 app.use(errorHandler);
 

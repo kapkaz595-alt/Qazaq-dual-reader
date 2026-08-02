@@ -3,6 +3,13 @@ const { ARABIC_TO_CYRILLIC_MAP, MULTI_CHAR_SEQUENCES, HAMZA } = require('./arabi
 const { AMBIGUITY_DICTIONARY } = require('./ambiguityDictionary');
 const { LOANWORD_DICTIONARY } = require('./loanwordDictionary');
 
+// 已知一对多歧义的阿拉伯字符：ي(и/й) ه(э/һ) ش(ш/щ)
+const AMBIGUOUS_ARABIC_CHARS = ['ي', 'ه', 'ش'];
+
+function hasAmbiguousChar(word) {
+  return AMBIGUOUS_ARABIC_CHARS.some(ch => word.includes(ch));
+}
+
 /**
  * 将单个阿拉伯哈萨克语单词转写为西里尔哈萨克文
  */
@@ -51,12 +58,26 @@ function transliterateWord(arabicWord) {
 }
 
 /**
+ * 单词转写 + 置信度评估
+ * 命中借词词典/歧义消解词典 -> high（词典已确认唯一正确写法）
+ * 未命中且含歧义字符(ي/ه/ش) -> low（规则转写结果可能不唯一正确）
+ * 未命中且不含歧义字符 -> high
+ */
+function transliterateWordWithConfidence(arabicWord) {
+  if (LOANWORD_DICTIONARY[arabicWord] || AMBIGUITY_DICTIONARY[arabicWord] !== undefined) {
+    return { text: transliterateWord(arabicWord), confidence: 'high' };
+  }
+  const text = transliterateWord(arabicWord);
+  const confidence = hasAmbiguousChar(arabicWord) ? 'low' : 'high';
+  return { text, confidence };
+}
+
+/**
  * 将一整段阿拉伯哈萨克文转写为西里尔哈萨克文
  */
 function transliterateText(arabicText) {
   if (!arabicText) return '';
 
-  // 按"阿拉伯文字符范围 vs 其他字符（空格/标点/换行）"切分，分隔符原样保留
   const arabicLetterPattern = /[\u0600-\u06FF]/;
   const tokens = arabicText.split(/([^\u0600-\u06FF]+)/);
 
@@ -65,7 +86,36 @@ function transliterateText(arabicText) {
     .join('');
 }
 
+/**
+ * 转写 + 返回低置信度片段列表
+ * @returns {{ text: string, lowConfidenceSegments: Array<{original: string, converted: string}> }}
+ */
+function transliterateTextWithConfidence(arabicText) {
+  if (!arabicText) return { text: '', lowConfidenceSegments: [] };
+
+  const arabicLetterPattern = /[\u0600-\u06FF]/;
+  const tokens = arabicText.split(/([^\u0600-\u06FF]+)/);
+
+  let fullText = '';
+  const lowConfidenceSegments = [];
+
+  tokens.forEach(token => {
+    if (arabicLetterPattern.test(token)) {
+      const { text, confidence } = transliterateWordWithConfidence(token);
+      fullText += text;
+      if (confidence === 'low') {
+        lowConfidenceSegments.push({ original: token, converted: text });
+      }
+    } else {
+      fullText += token;
+    }
+  });
+
+  return { text: fullText, lowConfidenceSegments };
+}
+
 module.exports = {
   transliterateWord,
   transliterateText,
+  transliterateTextWithConfidence,
 };
