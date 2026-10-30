@@ -133,9 +133,9 @@ textarea::placeholder { color: var(--ink-2); opacity: .75; font-family: var(--fo
 /* ---- conversion logic ---- */
 var HAMZA = "ٴ";
 var C2T = {
-  "а":"ا","ә":"أ","б":"ب","в":"ۆ","г":"گ","ғ":"ع","д":"د","е":"ە","ё":"يو","ж":"ج","з":"ز","и":"ي","й":"ي",
-  "к":"ك","қ":"ق","л":"ل","м":"م","н":"ن","ң":"ڭ","о":"و","ө":"ؤ","п":"پ","р":"ر","с":"س","т":"ت","у":"ۋ",
-  "ұ":"ۇ","ү":"ۇٔ","ф":"ف","х":"ح","һ":"ھ","ц":"تس","ч":"چ","ш":"ش","щ":"شش","ы":"ى","і":"ئ","э":"ە",
+  "а":"ا","ә":"ا","б":"ب","в":"ۆ","г":"گ","ғ":"ع","д":"د","е":"ە","ё":"يو","ж":"ج","з":"ز","и":"ي","й":"ي",
+  "к":"ك","қ":"ق","л":"ل","м":"م","н":"ن","ң":"ڭ","о":"و","ө":"و","п":"پ","р":"ر","с":"س","т":"ت","у":"ۋ",
+  "ұ":"ۇ","ү":"ۇ","ф":"ف","х":"ح","һ":"ھ","ц":"تس","ч":"چ","ш":"ش","щ":"شش","ы":"ى","і":"ى","э":"ە",
   "ю":"يۋ","я":"يا","ъ":"","ь":""
 };
 var FRONT = "әөүі";
@@ -168,7 +168,7 @@ function cyrWord(w) {
     if (FRONT.indexOf(ch) > -1) front = true;
     out += (C2T[ch] !== undefined ? C2T[ch] : ch);
   }
-  return dotless(out);
+  return ((front && !/[ەكگ]/.test(out)) ? HAMZA : "") + dotless(out);
 }
 function cyrToTote(text) {
   return text.replace(/([A-Za-z\u0259\u01DD\u0275\u019F\u0131\u0398\u03B8\u0400-\u04FF]+)|([,;?])/g, function (m, w, p) {
@@ -187,7 +187,7 @@ var CYR_VOWELS = "аәоөұүеыіу";
 var AR_VOWELS = "اوۇەى";
 
 function toteWord(w) {
-  var hz = w.indexOf(HAMZA) > -1, s = w.split(HAMZA).join(""), out = "", i = 0, ch, two, last, nxt;
+  var s = w.split(HAMZA).join(""), hz = w.indexOf(HAMZA) > -1 || /[ەكگ]/.test(s), out = "", i = 0, ch, two, last, nxt;
   while (i < s.length) {
     two = s.substr(i, 2);
     if (two === "\u06C7\u0654") { out += "ү"; i += 2; continue; }
