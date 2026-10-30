@@ -142,17 +142,40 @@ var FRONT = "әөүі";
 var P_C2T = { ",":"،", ";":"؛", "?":"؟" };
 var P_T2C = { "،":",", "؛":";", "؟":"?" };
 
+var LAT = {"a":"а","c":"с","e":"е","o":"о","p":"р","x":"х","y":"у","k":"к","m":"м","t":"т","i":"і","h":"һ",
+  "\u0259":"ә","\u01DD":"ә","\u0275":"ө","\u019F":"ө","\u0398":"ө","\u03B8":"ө","\u0131":"і"};
+var NONJOIN = "ادذرزوۆۇۋەءٴ";
+function fixLatin(w) {
+  var s = w.toLowerCase(), out = "", i, ch;
+  if (!/[\u0400-\u04FF]/.test(s)) {
+    for (i = 0; i < s.length; i++) if (LAT[s.charAt(i)] === undefined) return w;
+  }
+  for (i = 0; i < s.length; i++) { ch = s.charAt(i); out += (LAT[ch] !== undefined ? LAT[ch] : ch); }
+  return out;
+}
+function dotless(t) {
+  var r = "", i, nx;
+  for (i = 0; i < t.length; i++) {
+    nx = t.charAt(i + 1);
+    r += (t.charAt(i) === "ى" && nx && NONJOIN.indexOf(nx) < 0) ? "\u066E" : t.charAt(i);
+  }
+  return r;
+}
 function cyrWord(w) {
-  var s = w.toLowerCase(), out = "", front = false, i, ch;
+  var s = fixLatin(w).toLowerCase(), out = "", front = false, i, ch;
   for (i = 0; i < s.length; i++) {
     ch = s.charAt(i);
     if (FRONT.indexOf(ch) > -1) front = true;
     out += (C2T[ch] !== undefined ? C2T[ch] : ch);
   }
-  return (front ? HAMZA : "") + out;
+  return (front ? HAMZA : "") + dotless(out);
 }
 function cyrToTote(text) {
-  return text.replace(/([Ѐ-ӿ]+)|([,;?])/g, function (m, w, p) { return w ? cyrWord(w) : P_C2T[p]; });
+  return text.replace(/([A-Za-z\u0259\u01DD\u0275\u019F\u0131\u0398\u03B8\u0400-\u04FF]+)|([,;?])/g, function (m, w, p) {
+    if (!w) return P_C2T[p];
+    var f = fixLatin(w);
+    return (f === w && !/[\u0400-\u04FF]/.test(w)) ? w : cyrWord(w);
+  });
 }
 
 var T2C = {
@@ -172,18 +195,18 @@ function toteWord(w) {
     if (ch === "ا") out += hz ? "ә" : "а";
     else if (ch === "و") out += hz ? "ө" : "о";
     else if (ch === "ۇ") out += hz ? "ү" : "ұ";
-    else if (ch === "ى") out += hz ? "і" : "ы";
+    else if (ch === "ى" || ch === "\u066E" || ch === "ی") out += hz ? "і" : "ы";
     else if (ch === "ي") {
       last = out.charAt(out.length - 1);
       out += (last && CYR_VOWELS.indexOf(last) > -1) ? "й" : "и";
     }
-    else out += (T2C[ch] !== undefined ? T2C[ch] : ch);
+    else out += (ch === "ک" ? "к" : (T2C[ch] !== undefined ? T2C[ch] : ch));
     i++;
   }
   return out;
 }
 function toteToCyr(text) {
-  return text.replace(/([ء-يٴ-ە]+)|([،؛؟])/g, function (m, w, p) { return w ? toteWord(w) : P_T2C[p]; });
+  return text.replace(/([ء-يٮٴ-ە]+)|([،؛؟])/g, function (m, w, p) { return w ? toteWord(w) : P_T2C[p]; });
 }
 </script>
 
