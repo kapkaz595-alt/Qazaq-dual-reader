@@ -51,6 +51,7 @@ svg.i { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none;
 
 header { display: flex; align-items: center; gap: 10px; padding: 4px 2px; }
 header h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: .02em; }
+.langbtn { margin-left: auto; min-height: 38px; padding: 0 14px; font-weight: 700; border-radius: 999px; background: var(--accent-soft); color: var(--accent); border-color: transparent; }
 header .mark { width: 30px; height: 30px; color: var(--accent); }
 
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
@@ -92,7 +93,8 @@ textarea::placeholder { color: var(--ink-2); opacity: .75; font-family: var(--fo
 <main class="app">
   <header>
     <svg class="mark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="16" cy="16" r="13"/><path d="M16 5v22M6.5 10.5l19 11M25.5 10.5l-19 11"/></svg>
-    <h1>托特文转换</h1>
+    <h1 data-t="title">托特文转换</h1>
+    <button id="lang" class="langbtn" type="button" aria-label="Language">ҚАЗ</button>
   </header>
 
   <section class="panel" aria-label="转换方向">
@@ -102,22 +104,22 @@ textarea::placeholder { color: var(--ink-2); opacity: .75; font-family: var(--fo
       <button class="dir" id="dirT2C" type="button" aria-pressed="false"><span class="ar">قا</span><span>→</span><span>Қа</span></button>
     </div>
     <div class="row2">
-      <button class="sw" id="live" type="button" role="switch" aria-checked="true"><span class="track"></span><span>实时转换</span></button>
-      <button class="go" id="go" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M4 20L16 8M14 6l4 4M18 3v3M16.5 4.5h3M6 5v2M5 6h2M20 14v2M19 15h2"/></svg>开始转换</button>
+      <button class="sw" id="live" type="button" role="switch" aria-checked="true"><span class="track"></span><span data-t="live">实时转换</span></button>
+      <button class="go" id="go" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M4 20L16 8M14 6l4 4M18 3v3M16.5 4.5h3M6 5v2M5 6h2M20 14v2M19 15h2"/></svg><span data-t="go">开始转换</span></button>
     </div>
   </section>
 
   <section class="panel" aria-label="输入">
     <div class="card-h"><h2 id="inTitle">输入西里尔文</h2><span class="count" id="inCount">0 字符</span></div>
     <div class="tools">
-      <button class="soft" id="paste" type="button"><svg class="i" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg>粘贴文本</button>
-      <button id="clear" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>清空</button>
+      <button class="soft" id="paste" type="button"><svg class="i" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><span data-t="paste">粘贴文本</span></button>
+      <button id="clear" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg><span data-t="clear">清空</span></button>
     </div>
     <textarea id="input" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="在此处粘贴哈萨克西里尔文…"></textarea>
     <div class="bar">
       <button id="undo" type="button" aria-label="撤销"><svg class="i" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3"/></svg></button>
       <button id="redo" type="button" aria-label="重做"><svg class="i" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3"/></svg></button>
-      <button class="ex" id="example" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>使用示例</button>
+      <button class="ex" id="example" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span data-t="example">使用示例</span></button>
     </div>
   </section>
 
@@ -125,8 +127,8 @@ textarea::placeholder { color: var(--ink-2); opacity: .75; font-family: var(--fo
     <div class="card-h"><h2 id="outTitle">转换后托特文</h2><span class="count" id="outCount">0 字符</span></div>
     <textarea id="output" class="ar" dir="rtl" readonly spellcheck="false" placeholder="转换结果将显示在这里"></textarea>
     <div class="tools">
-      <button class="soft" id="copy" type="button"><svg class="i" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>复制结果</button>
-      <button id="toInput" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>结果放回输入</button>
+      <button class="soft" id="copy" type="button"><svg class="i" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg><span data-t="copy">复制结果</span></button>
+      <button id="toInput" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg><span data-t="back">结果放回输入</span></button>
     </div>
   </section>
 </main>
@@ -215,6 +217,24 @@ function toteToCyr(text) {
 </script>
 
 <script>
+/* ---- language ---- */
+var I18N = {
+  zh: { title:"托特文转换", live:"实时转换", go:"开始转换", paste:"粘贴文本", clear:"清空", example:"使用示例", copy:"复制结果", back:"结果放回输入",
+    inC:"输入西里尔文", inT:"输入托特文", outT:"转换后托特文", outC:"转换后西里尔文", chars:"字符",
+    phC:"在此处粘贴哈萨克西里尔文…", phT:"在此处粘贴托特文（阿拉伯字母哈萨克文）…", phOut:"转换结果将显示在这里",
+    tPaste:"请长按输入框，选择“粘贴”", tNone:"还没有结果", tCopied:"已复制", tManual:"请手动长按复制", btn:"ҚАЗ" },
+  kk: { title:"Төте жазу түрлендіргіші", live:"Нақты уақытта", go:"Түрлендіру", paste:"Қою", clear:"Тазалау", example:"Мысал", copy:"Көшіру", back:"Нәтижені енгізуге салу",
+    inC:"Кириллицаны енгізіңіз", inT:"Төте жазуды енгізіңіз", outT:"Төте жазу нәтижесі", outC:"Кириллица нәтижесі", chars:"таңба",
+    phC:"Қазақ кириллицасын осында қойыңыз…", phT:"Төте жазуды осында қойыңыз…", phOut:"Нәтиже осында көрсетіледі",
+    tPaste:"Енгізу жолын басып тұрып, «Қою» таңдаңыз", tNone:"Нәтиже әлі жоқ", tCopied:"Көшірілді", tManual:"Қолмен көшіріңіз", btn:"中文" }
+};
+var LANG = "zh";
+try { LANG = localStorage.getItem("tote-lang") || ((navigator.language || "").toLowerCase().indexOf("kk") === 0 ? "kk" : "zh"); } catch (e) {}
+if (!I18N[LANG]) LANG = "zh";
+function T(k) { return I18N[LANG][k]; }
+</script>
+
+<script>
 /* ---- interface ---- */
 (function () {
   var SAMPLE = "Сәлем, достар! Қазақстан — менің Отаным. Бүгін ауа райы өте жақсы.";
@@ -226,17 +246,18 @@ function toteToCyr(text) {
   function convert() {
     var v = input.value;
     output.value = dir === "c2t" ? cyrToTote(v) : toteToCyr(v);
-    $("inCount").textContent = v.length + " 字符";
-    $("outCount").textContent = output.value.length + " 字符";
+    $("inCount").textContent = v.length + " " + T("chars");
+    $("outCount").textContent = output.value.length + " " + T("chars");
   }
   function setDir(d) {
     dir = d;
     var c = d === "c2t";
     $("dirC2T").setAttribute("aria-pressed", c);
     $("dirT2C").setAttribute("aria-pressed", !c);
-    $("inTitle").textContent = c ? "输入西里尔文" : "输入托特文";
-    $("outTitle").textContent = c ? "转换后托特文" : "转换后西里尔文";
-    input.placeholder = c ? "在此处粘贴哈萨克西里尔文…" : "在此处粘贴托特文（阿拉伯字母哈萨克文）…";
+    $("inTitle").textContent = c ? T("inC") : T("inT");
+    $("outTitle").textContent = c ? T("outT") : T("outC");
+    input.placeholder = c ? T("phC") : T("phT");
+    output.placeholder = T("phOut");
     input.classList.toggle("ar", !c); input.dir = c ? "ltr" : "rtl";
     output.classList.toggle("ar", c); output.dir = c ? "rtl" : "ltr";
     convert();
@@ -254,7 +275,7 @@ function toteToCyr(text) {
   function toast(msg) { var t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(function () { t.classList.remove("on"); }, 1800); }
 
   input.addEventListener("input", function () {
-    if (live) convert(); else { $("inCount").textContent = input.value.length + " 字符"; }
+    if (live) convert(); else { $("inCount").textContent = input.value.length + " " + T("chars"); }
     clearTimeout(timer); timer = setTimeout(function () { timer = null; record(input.value); }, 400);
   });
   $("go").onclick = convert;
@@ -275,17 +296,30 @@ function toteToCyr(text) {
   $("undo").onclick = function () { flush(); if (hi > 0) { hi--; input.value = hist[hi]; convert(); buttons(); } };
   $("redo").onclick = function () { flush(); if (hi < hist.length - 1) { hi++; input.value = hist[hi]; convert(); buttons(); } };
   $("paste").onclick = function () {
-    var fail = function () { input.focus(); toast("请长按输入框，选择“粘贴”"); };
+    var fail = function () { input.focus(); toast(T("tPaste")); };
     try { navigator.clipboard.readText().then(function (t) { if (t) setText(t); else fail(); }, fail); } catch (e) { fail(); }
   };
   $("copy").onclick = function () {
-    var v = output.value; if (!v) { toast("还没有结果"); return; }
-    var done = function () { toast("已复制"); };
-    var fallback = function () { output.focus(); output.select(); try { document.execCommand("copy") ? done() : toast("请手动长按复制"); } catch (e) { toast("请手动长按复制"); } };
+    var v = output.value; if (!v) { toast(T("tNone")); return; }
+    var done = function () { toast(T("tCopied")); };
+    var fallback = function () { output.focus(); output.select(); try { document.execCommand("copy") ? done() : toast(T("tManual")); } catch (e) { toast(T("tManual")); } };
     try { navigator.clipboard.writeText(v).then(done, fallback); } catch (e) { fallback(); }
   };
 
-  setDir("c2t"); buttons();
+  function applyLang() {
+    document.documentElement.lang = LANG === "kk" ? "kk" : "zh";
+    document.title = T("title");
+    var els = document.querySelectorAll("[data-t]"), i;
+    for (i = 0; i < els.length; i++) els[i].textContent = T(els[i].getAttribute("data-t"));
+    $("lang").textContent = T("btn");
+    setDir(dir);
+  }
+  $("lang").onclick = function () {
+    LANG = LANG === "zh" ? "kk" : "zh";
+    try { localStorage.setItem("tote-lang", LANG); } catch (e) {}
+    applyLang();
+  };
+  applyLang(); buttons();
 })();
 </script>
 
